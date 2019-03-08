@@ -1,8 +1,8 @@
-module Lamdera.Evergreen exposing (andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTimePosix, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSet, encodeString, encodeTimePosix, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned)
+module Lamdera.Evergreen exposing (andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTimePosix, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTimePosix, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned)
 
 {-| Lamdera.Evergreen contains all the built-in codecs used by Wire.
 
-@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTimePosix, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSet, encodeString, encodeTimePosix, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned
+@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTimePosix, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTimePosix, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned
 
 -}
 
@@ -263,6 +263,12 @@ decodeList decoder =
 encodeSequence : List Encoder -> Encoder
 encodeSequence s =
     E.sequence (encodeInt64 (List.length s) :: s)
+
+
+{-| -}
+encodeSequenceWithoutLength : List Encoder -> Encoder
+encodeSequenceWithoutLength s =
+    E.sequence s
 
 
 
