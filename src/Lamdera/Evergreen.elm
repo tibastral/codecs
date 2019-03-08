@@ -218,7 +218,7 @@ identityFloatToInt =
 encodeString : String -> Encoder
 encodeString s =
     E.sequence
-        [ E.encodeInt64 (E.getStringWidth s)
+        [ encodeInt64 (E.getStringWidth s)
         , E.string s
         ]
 
@@ -226,7 +226,7 @@ encodeString s =
 {-| -}
 decodeString : Decoder String
 decodeString =
-    D.decodeInt64
+    decodeInt64
         |> D.andThen D.string
 
 
