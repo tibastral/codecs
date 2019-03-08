@@ -145,13 +145,13 @@ encodeInt64 i =
         ei <| [ 216 + ((n - 216) |> intDivBy 256), modBy 256 (n - 216) ]
 
     else if n < 256 * 256 then
-        ei <| [ 252, n0, n1 ]
+        ei <| [ 252, n1, n0 ]
 
     else if n < 256 * 256 * 256 then
-        ei <| [ 253, n0, n1, n2 ]
+        ei <| [ 253, n2, n1, n0 ]
 
     else if n < 256 * 256 * 256 * 256 then
-        ei <| [ 254, n0, n1, n2, n3 ]
+        ei <| [ 254, n3, n2, n1, n0 ]
 
     else
         E.sequence [ E.unsignedInt8 255, encodeFloat64 (toFloat i) ]
