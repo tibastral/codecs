@@ -21,8 +21,8 @@ import Time
 
 {-| -}
 andMapDecode : Decoder a -> Decoder (a -> b) -> Decoder b
-andMapDecode =
-    D.map2 (|>)
+andMapDecode d d2 =
+    D.andThen (\v -> D.map v d) d2
 
 
 {-| -}
