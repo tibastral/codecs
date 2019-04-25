@@ -55,7 +55,7 @@ failDecode =
 {-| -}
 failEncode : a -> Encoder
 failEncode a =
-    encodeSequence []
+    encodeSequenceWithoutLength []
 
 
 
@@ -414,13 +414,13 @@ encodeOrder : Order -> Encoder
 encodeOrder order =
     case order of
         LT ->
-            encodeSequence [ encodeString "LT" ]
+            encodeSequenceWithoutLength [ encodeString "LT" ]
 
         EQ ->
-            encodeSequence [ encodeString "EQ" ]
+            encodeSequenceWithoutLength [ encodeString "EQ" ]
 
         GT ->
-            encodeSequence [ encodeString "GT" ]
+            encodeSequenceWithoutLength [ encodeString "GT" ]
 
 
 {-| -}
@@ -497,10 +497,10 @@ encodeMaybe : (a -> Encoder) -> Maybe a -> Encoder
 encodeMaybe encVal s =
     case s of
         Nothing ->
-            encodeSequence [ encodeInt 0 ]
+            encodeSequenceWithoutLength [ encodeInt 0 ]
 
         Just v ->
-            encodeSequence [ encodeInt 1, encVal v ]
+            encodeSequenceWithoutLength [ encodeInt 1, encVal v ]
 
 
 {-| -}
@@ -530,10 +530,10 @@ encodeResult : (err -> Encoder) -> (val -> Encoder) -> Result err val -> Encoder
 encodeResult encErr encVal s =
     case s of
         Ok v ->
-            encodeSequence [ encodeInt 0, encVal v ]
+            encodeSequenceWithoutLength [ encodeInt 0, encVal v ]
 
         Err v ->
-            encodeSequence [ encodeInt 1, encErr v ]
+            encodeSequenceWithoutLength [ encodeInt 1, encErr v ]
 
 
 {-| -}
