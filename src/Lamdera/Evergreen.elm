@@ -139,8 +139,9 @@ encodeInt64 i =
     in
     if n <= 215 then
         ei <| [ n ]
-        --else if n <= 9431 then
-        --    ei <| [ 216 + ((n - 216) |> intDivBy 256), modBy 256 (n - 216) ]
+
+    else if n <= 9431 then
+        ei <| [ 216 + ((n - 216) |> intDivBy 256), modBy 256 (n - 216) ]
 
     else if n < 256 * 256 then
         ei <| [ 252, n1, n0 ]
