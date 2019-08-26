@@ -472,7 +472,7 @@ encodeNever =
 
 
 {-| -}
-encodeDict : (comparable -> Encoder) -> (value -> Encoder) -> Dict comparable value -> Encoder
+encodeDict : (key -> Encoder) -> (value -> Encoder) -> Dict key value -> Encoder
 encodeDict encKey encValue d =
     encodeList (encodePair encKey encValue) (Dict.toList d)
 
@@ -488,7 +488,7 @@ decodeDict decKey decValue =
 
 
 {-| -}
-encodeSet : (comparable -> Encoder) -> Set comparable -> Encoder
+encodeSet : (value -> Encoder) -> Set value -> Encoder
 encodeSet encVal s =
     encodeList encVal (Set.toList s)
 
