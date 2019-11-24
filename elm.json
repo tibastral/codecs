@@ -1,11 +1,11 @@
 {
     "type": "package",
-    "name": "Lamdera/codecs",
+    "name": "lamdera/codecs",
     "summary": "Lamdera core codecs",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
-        "Lamdera.Evergreen",
+        "Lamdera.Wire",
         "Lamdera.Migrations"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
@@ -13,9 +13,5 @@
         "elm/bytes": "1.0.7 <= v < 2.0.0",
         "elm/core": "1.0.2 <= v < 2.0.0"
     },
-    "test-dependencies": {
-        "elm/json": "1.1.3 <= v < 2.0.0",
-        "elm-explorations/test": "1.2.1 <= v < 2.0.0",
-        "drathier/elm-test-tables": "3.0.0 <= v < 4.0.0"
-    }
+    "test-dependencies": {}
 }

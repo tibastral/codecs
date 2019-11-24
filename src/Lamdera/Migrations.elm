@@ -1,33 +1,14 @@
-module Lamdera.Migrations exposing (decodeType, decodeSequence, intListFromBytes, intListToBytes, CurrentType(..), UpgradeResult(..), Migration(..), UnimplementedMigration(..))
+module Lamdera.Migrations exposing (decodeSequence, intListFromBytes, intListToBytes, Migration(..), UnimplementedMigration(..), encode)
 
 {-|
 
-@docs decodeType, decodeSequence, intListFromBytes, intListToBytes, CurrentType, UpgradeResult, Migration, UnimplementedMigration
+@docs decodeSequence, intListFromBytes, intListToBytes, Migration, UnimplementedMigration, encode
 
 -}
 
 import Bytes as B exposing (Bytes)
 import Bytes.Decode as D
 import Bytes.Encode as E
-
-
-{-| -}
-type CurrentType backendModel frontendModel frontendMsg toBackend backendMsg toFrontend
-    = CurrentBackendModel ( backendModel, Cmd backendMsg )
-    | CurrentFrontendModel ( frontendModel, Cmd frontendMsg )
-    | CurrentFrontendMsg ( frontendMsg, Cmd frontendMsg )
-    | CurrentToBackend ( toBackend, Cmd backendMsg )
-    | CurrentBackendMsg ( backendMsg, Cmd backendMsg )
-    | CurrentToFrontend ( toFrontend, Cmd frontendMsg )
-
-
-{-| -}
-type UpgradeResult backendModel frontendModel frontendMsg toBackend backendMsg toFrontend
-    = AlreadyCurrent (CurrentType backendModel frontendModel frontendMsg toBackend backendMsg toFrontend)
-    | Upgraded (CurrentType backendModel frontendModel frontendMsg toBackend backendMsg toFrontend)
-    | UnknownVersion ( Int, String, List Int )
-    | UnknownType String
-    | DecoderError
 
 
 {-| -}
@@ -70,28 +51,6 @@ decodeSequence len decoder =
 
 
 {-| -}
-decodeType :
-    Int -- version
-    -> List Int -- intList
-    -> D.Decoder oldValue -- decoderOld
-    -> Result String ( oldValue, Cmd msg )
-decodeType version intList decoderOld =
-    case D.decode decoderOld (intListToBytes intList) of
-        Just oldValue ->
-            let
-                x =
-                    Debug.log ("[decodeType] decoded old value:" ++ Debug.toString oldValue)
-            in
-            Ok ( oldValue, Cmd.none )
-
-        Nothing ->
-            -- @TODO This would mean data has been manipulated or corrupted,
-            -- or we have a bug in our encoder/decoder generation
-            let
-                err =
-                    "[decodeType] impossbile happened; failed to decode in version " ++ String.fromInt version
-
-                x =
-                    Debug.log err
-            in
-            Err err
+encode : E.Encoder -> B.Bytes
+encode =
+    E.encode

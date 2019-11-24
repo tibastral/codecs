@@ -1,8 +1,8 @@
-module Lamdera.Evergreen exposing (andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder)
+module Lamdera.Wire exposing (andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode)
 
-{-| Lamdera.Evergreen contains all the built-in codecs used by Wire.
+{-| Lamdera.Wire contains all the built-in codecs used by Wire.
 
-@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder
+@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode
 
 -}
 
@@ -24,8 +24,16 @@ type alias Encoder =
     E.Encoder
 
 
+{-| -}
+bytesEncode : E.Encoder -> B.Bytes
+bytesEncode =
+    E.encode
 
--- combinators
+
+{-| -}
+bytesDecode : D.Decoder a -> B.Bytes -> Maybe a
+bytesDecode =
+    D.decode
 
 
 {-| -}
@@ -38,10 +46,6 @@ andMapDecode d d2 =
 andThenDecode : (a -> Decoder b) -> Decoder a -> Decoder b
 andThenDecode =
     D.andThen
-
-
-
---
 
 
 {-| -}
@@ -68,10 +72,6 @@ failEncode a =
     encodeSequenceWithoutLength []
 
 
-
--- CODECS
-
-
 {-| -}
 encodeFloat64 : Float -> Encoder
 encodeFloat64 f =
@@ -82,10 +82,6 @@ encodeFloat64 f =
 decodeFloat64 : Decoder Float
 decodeFloat64 =
     D.float64 endianness
-
-
-
---
 
 
 {-| -}
@@ -239,10 +235,6 @@ decodeString =
         |> D.andThen D.string
 
 
-
--- lists
-
-
 {-| -}
 encodeList : (a -> Encoder) -> List a -> Encoder
 encodeList enc s =
@@ -280,10 +272,6 @@ encodeSequenceWithoutLength s =
     E.sequence s
 
 
-
---
-
-
 {-| -}
 encodeChar : Char -> Encoder
 encodeChar c =
@@ -297,10 +285,6 @@ decodeChar =
     decodeInt64 |> D.map Char.fromCode
 
 
-
---
-
-
 {-| -}
 encodeUnit : () -> Encoder
 encodeUnit () =
@@ -311,10 +295,6 @@ encodeUnit () =
 decodeUnit : Decoder ()
 decodeUnit =
     D.succeed ()
-
-
-
---
 
 
 {-| -}
@@ -346,10 +326,6 @@ decodeTriple c_a c_b c_c =
         |> andMapDecode c_c
 
 
-
--- Array
-
-
 {-| -}
 encodeArray : (a -> Encoder) -> Array a -> Encoder
 encodeArray enc a =
@@ -360,10 +336,6 @@ encodeArray enc a =
 decodeArray : Decoder a -> Decoder (Array a)
 decodeArray a =
     decodeList a |> D.map Array.fromList
-
-
-
--- Basics
 
 
 {-| -}
@@ -425,29 +397,29 @@ encodeOrder : Order -> Encoder
 encodeOrder order =
     case order of
         LT ->
-            encodeSequenceWithoutLength [ encodeString "LT" ]
+            encodeInt 0
 
         EQ ->
-            encodeSequenceWithoutLength [ encodeString "EQ" ]
+            encodeInt 1
 
         GT ->
-            encodeSequenceWithoutLength [ encodeString "GT" ]
+            encodeInt 2
 
 
 {-| -}
 decodeOrder : Decoder Order
 decodeOrder =
-    decodeString
-        |> andThenDecode
-            (\order ->
-                case order of
-                    "LT" ->
+    decodeInt
+        |> D.andThen
+            (\c ->
+                case c of
+                    0 ->
                         succeedDecode LT
 
-                    "EQ" ->
+                    1 ->
                         succeedDecode EQ
 
-                    "GT" ->
+                    2 ->
                         succeedDecode GT
 
                     _ ->
@@ -467,10 +439,6 @@ encodeNever =
     failEncode
 
 
-
--- Dict
-
-
 {-| -}
 encodeDict : (key -> Encoder) -> (value -> Encoder) -> Dict key value -> Encoder
 encodeDict encKey encValue d =
@@ -483,10 +451,6 @@ decodeDict decKey decValue =
     decodeList (decodePair decKey decValue) |> D.map Dict.fromList
 
 
-
--- Set
-
-
 {-| -}
 encodeSet : (value -> Encoder) -> Set value -> Encoder
 encodeSet encVal s =
@@ -497,10 +461,6 @@ encodeSet encVal s =
 decodeSet : Decoder comparable -> Decoder (Set comparable)
 decodeSet decVal =
     decodeList decVal |> D.map Set.fromList
-
-
-
--- Maybe
 
 
 {-| -}
@@ -532,10 +492,6 @@ decodeMaybe decVal =
             )
 
 
-
--- Result
-
-
 {-| -}
 encodeResult : (err -> Encoder) -> (val -> Encoder) -> Result err val -> Encoder
 encodeResult encErr encVal s =
@@ -563,10 +519,6 @@ decodeResult decErr decVal =
                     _ ->
                         failDecode
             )
-
-
-
--- Bytes
 
 
 {-| -}
