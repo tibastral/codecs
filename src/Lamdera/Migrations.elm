@@ -26,7 +26,7 @@ type UnimplementedMigration
 {-| -}
 intListFromBytes : Bytes -> List Int
 intListFromBytes bytes =
-    D.decode (decodeSequence (B.width bytes) D.unsignedInt8) bytes |> Maybe.withDefault [ 47111, 11147, 1, 2, 3, 47111 ]
+    D.decode (decodeSequence (B.width bytes) D.unsignedInt8) bytes |> Maybe.withDefault [ 0, 0, 0, 0, 0 ]
 
 
 {-| -}
