@@ -1,8 +1,8 @@
-module Lamdera.Migrations exposing (decodeSequence, intListFromBytes, intListToBytes, Migration(..), UnimplementedMigration(..), encode)
+module Lamdera.Migrations exposing (decodeSequence, intListFromBytes, intListToBytes, ModelMigration(..), MsgMigration(..), UnimplementedMigration(..), encode)
 
 {-|
 
-@docs decodeSequence, intListFromBytes, intListToBytes, Migration, UnimplementedMigration, encode
+@docs decodeSequence, intListFromBytes, intListToBytes, ModelMigration, MsgMigration, UnimplementedMigration, encode
 
 -}
 
@@ -12,10 +12,16 @@ import Bytes.Encode as E
 
 
 {-| -}
-type Migration a msg
-    = Unchanged
-    | Migrated ( a, Cmd msg )
-    | IgnoredOldValues -- @TODO examples for this?
+type ModelMigration model msg
+    = ModelUnchanged
+    | ModelMigrated ( model, Cmd msg )
+
+
+{-| -}
+type MsgMigration msg cmdMsg
+    = MsgUnchanged
+    | MsgIgnoreOldValues
+    | MsgMigrated ( msg, Cmd cmdMsg )
 
 
 {-| -}
