@@ -1,8 +1,8 @@
-module Lamdera.Wire exposing (andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode)
+module Lamdera.Wire exposing (andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode, intListFromBytes, intListToBytes, decodeSequence)
 
 {-| Lamdera.Wire contains all the built-in codecs used by Wire.
 
-@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode
+@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode, intListFromBytes, intListToBytes, decodeSequence
 
 -}
 
@@ -531,3 +531,30 @@ encodeBytes b =
 decodeBytes : Decoder B.Bytes
 decodeBytes =
     decodeInt |> D.andThen D.bytes
+
+
+{-| -}
+intListFromBytes : B.Bytes -> List Int
+intListFromBytes bytes =
+    D.decode (decodeSequence (B.width bytes) D.unsignedInt8) bytes |> Maybe.withDefault [ 0, 0, 0, 0, 0 ]
+
+
+{-| -}
+intListToBytes : List Int -> B.Bytes
+intListToBytes s =
+    E.encode (E.sequence (List.map E.unsignedInt8 s))
+
+
+{-| -}
+decodeSequence : Int -> D.Decoder a -> D.Decoder (List a)
+decodeSequence len decoder =
+    let
+        listStep : ( Int, List a ) -> D.Decoder (D.Step ( Int, List a ) (List a))
+        listStep ( n, xs ) =
+            if n <= 0 then
+                D.succeed (D.Done xs)
+
+            else
+                D.map (\x -> D.Loop ( n - 1, x :: xs )) decoder
+    in
+    D.loop ( len, [] ) listStep |> D.map List.reverse
