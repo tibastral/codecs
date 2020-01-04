@@ -16,8 +16,8 @@ type ModelMigration model msg
 {-| -}
 type MsgMigration msg cmdMsg
     = MsgUnchanged
-    | MsgIgnoreOldValues
     | MsgMigrated ( msg, Cmd cmdMsg )
+    | MsgOldValueIgnored
 
 
 {-| -}
