@@ -1,5 +1,5 @@
 module Lamdera.Wire2 exposing
-    ( andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode, intListFromBytes, intListToBytes, decodeSequence
+    ( andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode, intListFromBytes, intListToBytes, decodeSequence, decodeEndianness, encodeEndianness
     , decodeUnsignedInt8, encodeUnsignedInt8
     )
 
@@ -7,7 +7,7 @@ module Lamdera.Wire2 exposing
 
 It is the second version for generalised usage, and is more compact than the first iteration.
 
-@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode, intListFromBytes, intListToBytes, decodeSequence
+@docs andMapDecode, andThenDecode, decodeArray, decodeBool, decodeBytes, decodeChar, decodeDict, decodeFloat, decodeFloat64, decodeInt, decodeInt64, decodeList, decodeMaybe, decodeNever, decodeOrder, decodePair, decodeResult, decodeSet, decodeString, decodeTriple, decodeUnit, encodeArray, encodeBool, encodeBytes, encodeChar, encodeDict, encodeFloat, encodeFloat64, encodeInt, encodeInt64, encodeList, encodeMaybe, encodeNever, encodeOrder, encodePair, encodeResult, encodeSequence, encodeSequenceWithoutLength, encodeSet, encodeString, encodeTriple, encodeUnit, endianness, failDecode, failEncode, identityFloatToInt, intDivBy, signedToUnsigned, succeedDecode, unsignedToSigned, Decoder, Encoder, bytesEncode, bytesDecode, intListFromBytes, intListToBytes, decodeSequence, decodeEndianness, encodeEndianness
 @docs decodeUnsignedInt8, encodeUnsignedInt8
 
 -}
@@ -544,6 +544,35 @@ encodeBytes b =
 decodeBytes : Decoder B.Bytes
 decodeBytes =
     decodeInt |> D.andThen D.bytes
+
+
+{-| -}
+encodeEndianness : B.Endianness -> Encoder
+encodeEndianness order =
+    case order of
+        B.LE ->
+            E.unsignedInt8 0
+
+        B.BE ->
+            E.unsignedInt8 1
+
+
+{-| -}
+decodeEndianness : Decoder B.Endianness
+decodeEndianness =
+    D.unsignedInt8
+        |> D.andThen
+            (\c ->
+                case c of
+                    0 ->
+                        succeedDecode B.LE
+
+                    1 ->
+                        succeedDecode B.BE
+
+                    _ ->
+                        failDecode
+            )
 
 
 {-| -}
