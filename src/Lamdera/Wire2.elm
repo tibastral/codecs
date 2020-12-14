@@ -17,6 +17,7 @@ import Bytes as B
 import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
+import Elm.Kernel.LamderaCodecs
 import Set exposing (Set)
 
 
@@ -572,6 +573,22 @@ decodeEndianness =
 
                     _ ->
                         failDecode
+            )
+
+
+encodeRef : a -> Encoder
+encodeRef v =
+    Elm.Kernel.LamderaCodecs.encodeWithRef v
+        |> E.unsignedInt32 endianness
+
+
+decodeRef : D.Decoder a
+decodeRef =
+    D.unsignedInt32
+        endianness
+        |> D.andThen
+            (\ref ->
+                succeedDecode <| Elm.Kernel.LamderaCodecs.decodeWithRef ref
             )
 
 
