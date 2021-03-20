@@ -114,6 +114,7 @@ intDivBy b a =
    249-255 3-9 bytes value = (B0 - 249 + 2) little-endian bytes following B0.
 
    Inspired by:
+   https://en.wikipedia.org/wiki/Variable-length_quantity#Zigzag_encoding
    https://github.com/dominictarr/signed-varint
 
    Integers are mapped to positive integers, so that positive integers become positive even numbers (2n) and negative integers become positive odd numbers. (-2n-1)

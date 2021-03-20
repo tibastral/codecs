@@ -1,4 +1,5 @@
 /*
+import Result exposing (Ok)
 */
 
 var wireRefs = (function () {
@@ -24,12 +25,31 @@ var wireRefs = (function () {
   return f;
 })();
 
-
 var _LamderaCodecs_encodeWithRef = function(a) {
 	return wireRefs.add(a);
 }
 
-
 var _LamderaCodecs_decodeWithRef = function(ref) {
 	return wireRefs.getFinal(ref);
+}
+
+var _LamderaCodecs_encodeBytes = function(s) { return _Lamdera_Json_wrap(s); }
+
+function _Lamdera_Json_wrap__DEBUG(value) { return { $: __0_JSON, a: value }; }
+function _Lamdera_Json_wrap__PROD(value) { return value; }
+
+function _LamderaCodecs_Json_decodePrim(decoder) {
+	return { $: __1_PRIM, __decoder: decoder };
+}
+
+var _LamderaCodecs_decodeBytes = _Json_decodePrim(function(value) {
+  return (typeof value === 'object' && value instanceof DataView)
+    ? __Result_Ok(value)
+    : _Json_expecting('a DataView', value) ;
+    // : console.log('error: expecting DataView, got', value) ;
+});
+
+var _LamderaCodecs_debug = function(s) {
+  console.log(s);
+  return 0;
 }
