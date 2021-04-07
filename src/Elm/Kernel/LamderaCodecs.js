@@ -1,5 +1,6 @@
 /*
 import Result exposing (Ok)
+import Maybe exposing (Just, Nothing)
 */
 
 var wireRefs = (function () {
@@ -26,11 +27,11 @@ var wireRefs = (function () {
 })();
 
 var _LamderaCodecs_encodeWithRef = function(a) {
-	return wireRefs.add(a);
+  return wireRefs.add(a);
 }
 
 var _LamderaCodecs_decodeWithRef = function(ref) {
-	return wireRefs.getFinal(ref);
+  return wireRefs.getFinal(ref);
 }
 
 var _LamderaCodecs_encodeBytes = function(s) { return _Lamdera_Json_wrap(s); }
@@ -39,7 +40,7 @@ function _Lamdera_Json_wrap__DEBUG(value) { return { $: __0_JSON, a: value }; }
 function _Lamdera_Json_wrap__PROD(value) { return value; }
 
 function _LamderaCodecs_Json_decodePrim(decoder) {
-	return { $: __1_PRIM, __decoder: decoder };
+  return { $: __1_PRIM, __decoder: decoder };
 }
 
 var _LamderaCodecs_decodeBytes = _Json_decodePrim(function(value) {
@@ -51,5 +52,23 @@ var _LamderaCodecs_decodeBytes = _Json_decodePrim(function(value) {
 
 var _LamderaCodecs_debug = function(s) {
   console.log(s);
-  return 0;
+  return _Utils_Tuple0;
 }
+
+// Duplicate of _Bytes_decode that expects all bytes to be consumed,
+// otherwise it fails to decode.
+var _LamderaCodecs_bytesDecodeStrict = F2(function(decoder, bytes)
+{
+  try {
+    var res = A2(decoder, bytes, 0);
+    const w = bytes.byteLength;
+    if (w !== res.a) {
+      // For now just log issues, in future we'll actually fail on this case
+      console.log(`❌ bytesDecodeStrict did not consume all bytes: length:${w}, consumed:${res.a}`, res.b, new Uint8Array(bytes.buffer));
+    }
+    return __Maybe_Just(res.b);
+  } catch(e) {
+    console.log('❌ bytesDecodeStrict unexpected error:', e);
+    return __Maybe_Nothing;
+  }
+});

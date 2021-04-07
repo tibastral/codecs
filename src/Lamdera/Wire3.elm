@@ -6,7 +6,7 @@ module Lamdera.Wire3 exposing
     , encodeArray, encodeDict, encodeFloat, encodeList, encodeMaybe, encodeNever, encodeOrder, encodeResult, encodeSet
     , identityFloatToInt, intDivBy, signedToUnsigned, unsignedToSigned
     , decodeUnsignedInt8, encodeUnsignedInt8
-    , bytesEncode, bytesDecode
+    , bytesEncode, bytesDecode, bytesDecodeStrict
     , encodeSequence, encodeSequenceWithoutLength, decodeSequence
     , andMapDecode, andThenDecode, endianness
     , failDecode, failEncode, succeedDecode
@@ -15,9 +15,9 @@ module Lamdera.Wire3 exposing
     , decodeBytes_, encodeBytes_
     )
 
-{-| Lamdera.Wire2 contains all the built-in codecs used by Lamdera
+{-| Lamdera.Wire3 contains all the built-in codecs used by Lamdera
 
-It is the second version for generalised usage, and is more compact than the first iteration.
+It is the third version for generalised usage.
 
 @docs Decoder, Encoder, Bytes
 @docs decodeFloat64, decodeInt, decodeInt64, decodeString, decodeUnit, decodePair, decodeTriple, decodeBool, decodeBytes, decodeChar
@@ -26,7 +26,7 @@ It is the second version for generalised usage, and is more compact than the fir
 @docs encodeArray, encodeDict, encodeFloat, encodeList, encodeMaybe, encodeNever, encodeOrder, encodeResult, encodeSet
 @docs identityFloatToInt, intDivBy, signedToUnsigned, unsignedToSigned
 @docs decodeUnsignedInt8, encodeUnsignedInt8
-@docs bytesEncode, bytesDecode
+@docs bytesEncode, bytesDecode, bytesDecodeStrict
 @docs encodeSequence, encodeSequenceWithoutLength, decodeSequence
 @docs andMapDecode, andThenDecode, endianness
 @docs failDecode, failEncode, succeedDecode
@@ -70,6 +70,12 @@ bytesEncode =
 bytesDecode : D.Decoder a -> B.Bytes -> Maybe a
 bytesDecode =
     D.decode
+
+
+{-| -}
+bytesDecodeStrict : D.Decoder a -> B.Bytes -> Maybe a
+bytesDecodeStrict =
+    Elm.Kernel.LamderaCodecs.bytesDecodeStrict
 
 
 {-| -}
@@ -660,11 +666,13 @@ decodeSequence len decoder =
 
 
 {-| -}
+encodeBytes_ : B.Bytes -> Encoder
 encodeBytes_ =
     Elm.Kernel.LamderaCodecs.encodeBytes
 
 
 {-| -}
+decodeBytes_ : D.Decoder B.Bytes
 decodeBytes_ =
     Elm.Kernel.LamderaCodecs.decodeBytes
 
