@@ -13,6 +13,8 @@ module Lamdera.Wire3 exposing
     , intListFromBytes, intListToBytes
     , decodeEndianness, encodeEndianness
     , decodeBytes_, encodeBytes_
+    , decodeHashDict, decodeHashSet
+    , encodeHashDict, encodeHashSet
     )
 
 {-| Lamdera.Wire3 contains all the built-in codecs used by Lamdera
@@ -33,6 +35,8 @@ It is the third version for generalised usage.
 @docs intListFromBytes, intListToBytes
 @docs decodeEndianness, encodeEndianness
 @docs decodeBytes_, encodeBytes_
+@docs decodeHashDict, decodeHashSet
+@docs encodeHashDict, encodeHashSet
 
 -}
 
@@ -42,6 +46,8 @@ import Bytes.Decode as D exposing (Decoder)
 import Bytes.Encode as E exposing (Encoder)
 import Dict exposing (Dict)
 import Elm.Kernel.LamderaCodecs
+import Hash.Dict
+import Hash.Set
 import Set exposing (Set)
 
 
@@ -521,6 +527,30 @@ encodeSet encVal s =
 decodeSet : Decoder comparable -> Decoder (Set comparable)
 decodeSet decVal =
     decodeList decVal |> D.map Set.fromList
+
+
+{-| -}
+encodeHashDict : (key -> Encoder) -> (value -> Encoder) -> Hash.Dict.Dict key value -> Encoder
+encodeHashDict encKey encValue d =
+    encodeList (encodePair encKey encValue) (Hash.Dict.toList d)
+
+
+{-| -}
+decodeHashDict : Decoder k -> Decoder value -> Decoder (Hash.Dict.Dict k value)
+decodeHashDict decKey decValue =
+    decodeList (decodePair decKey decValue) |> D.map Hash.Dict.fromList
+
+
+{-| -}
+encodeHashSet : (value -> Encoder) -> Hash.Set.Set value -> Encoder
+encodeHashSet encVal s =
+    encodeList encVal (Hash.Set.toList s)
+
+
+{-| -}
+decodeHashSet : Decoder k -> Decoder (Hash.Set.Set k)
+decodeHashSet decVal =
+    decodeList decVal |> D.map Hash.Set.fromList
 
 
 {-| -}
