@@ -286,26 +286,12 @@ decodeString =
 {-| -}
 encodeList : (a -> Encoder) -> List a -> Encoder
 encodeList enc s =
-    E.sequence
-        (encodeInt64 (List.length s)
-            :: List.map enc s
-        )
+    encodeListLike enc List.foldr s
 
 
-{-| -}
 decodeList : Decoder a -> Decoder (List a)
 decodeList decoder =
-    let
-        listStep : ( Int, List a ) -> Decoder (D.Step ( Int, List a ) (List a))
-        listStep ( n, xs ) =
-            if n <= 0 then
-                D.succeed (D.Done xs)
-
-            else
-                D.map (\x -> D.Loop ( n - 1, x :: xs )) decoder
-    in
-    decodeInt64
-        |> D.andThen (\len -> D.loop ( len, [] ) listStep |> D.map List.reverse)
+    decodeListLike decoder (::) List.reverse []
 
 
 {-| -}
@@ -354,9 +340,9 @@ encodePair c_a c_b ( a, b ) =
 {-| -}
 decodePair : Decoder a -> Decoder b -> Decoder ( a, b )
 decodePair c_a c_b =
-    D.succeed (\a b -> ( a, b ))
-        |> andMapDecode c_a
-        |> andMapDecode c_b
+    D.map2 (\a b -> ( a, b ))
+        c_a
+        c_b
 
 
 {-| -}
@@ -368,34 +354,33 @@ encodeTriple c_a c_b c_c ( a, b, c ) =
 {-| -}
 decodeTriple : Decoder a -> Decoder b -> Decoder c -> Decoder ( a, b, c )
 decodeTriple c_a c_b c_c =
-    D.succeed (\a b c -> ( a, b, c ))
-        |> andMapDecode c_a
-        |> andMapDecode c_b
-        |> andMapDecode c_c
+    D.map3 (\a b c -> ( a, b, c ))
+        c_a
+        c_b
+        c_c
 
 
 {-| -}
 encodeArray : (a -> Encoder) -> Array a -> Encoder
 encodeArray enc a =
-    encodeList enc (Array.toList a)
+    encodeListLike enc Array.foldr a
 
 
 {-| -}
 decodeArray : Decoder a -> Decoder (Array a)
 decodeArray a =
-    decodeList a |> D.map Array.fromList
+    decodeListLike a Array.push identity Array.empty
 
 
 {-| -}
 encodeBool : Bool -> Encoder
 encodeBool b =
     E.unsignedInt8 <|
-        case b of
-            False ->
-                0
+        if b then
+            1
 
-            True ->
-                1
+        else
+            0
 
 
 {-| -}
@@ -502,25 +487,88 @@ encodeNever =
 {-| -}
 encodeDict : (key -> Encoder) -> (value -> Encoder) -> Dict key value -> Encoder
 encodeDict encKey encValue d =
-    encodeList (encodePair encKey encValue) (Dict.toList d)
+    let
+        ( encodedList, length ) =
+            Dict.foldr
+                (\key value ( acc, len ) ->
+                    ( encKey key :: encValue value :: acc, len + 1 )
+                )
+                ( [], 0 )
+                d
+    in
+    E.sequence
+        (encodeInt64 length
+            :: encodedList
+        )
 
 
 {-| -}
 decodeDict : Decoder comparable -> Decoder value -> Decoder (Dict comparable value)
 decodeDict decKey decValue =
-    decodeList (decodePair decKey decValue) |> D.map Dict.fromList
+    let
+        dictStep : ( Int, Dict comparable value ) -> Decoder (D.Step ( Int, Dict comparable value ) (Dict comparable value))
+        dictStep ( n, xs ) =
+            if n <= 0 then
+                D.succeed (D.Done xs)
+
+            else
+                D.map2
+                    (\key value -> D.Loop ( n - 1, Dict.insert key value xs ))
+                    decKey
+                    decValue
+    in
+    decodeInt64
+        |> D.andThen (\len -> D.loop ( len, Dict.empty ) dictStep)
 
 
 {-| -}
 encodeSet : (value -> Encoder) -> Set value -> Encoder
 encodeSet encVal s =
-    encodeList encVal (Set.toList s)
+    encodeListLike encVal Set.foldr s
 
 
 {-| -}
 decodeSet : Decoder comparable -> Decoder (Set comparable)
 decodeSet decVal =
-    decodeList decVal |> D.map Set.fromList
+    decodeListLike decVal Set.insert identity Set.empty
+
+
+encodeListLike :
+    (a -> Encoder)
+    -> ((a -> ( List Encoder, Int ) -> ( List Encoder, Int )) -> ( List Encoder, Int ) -> value -> ( List Encoder, Int ))
+    -> value
+    -> Encoder
+encodeListLike encVal foldr val =
+    let
+        ( encodedContainer, length ) =
+            foldr
+                (\value ( acc, len ) ->
+                    ( encVal value :: acc, len + 1 )
+                )
+                ( [], 0 )
+                val
+    in
+    E.sequence
+        (encodeInt64 length
+            :: encodedContainer
+        )
+
+
+decodeListLike : Decoder a -> (a -> b -> b) -> (b -> b) -> c -> Decoder c
+decodeListLike decVal step final initial =
+    let
+        doStep : ( Int, a ) -> Decoder (D.Step ( Int, a ) a)
+        doStep ( n, xs ) =
+            if n <= 0 then
+                D.succeed (D.Done (final xs))
+
+            else
+                D.map
+                    (\value -> D.Loop ( n - 1, step value xs ))
+                    decVal
+    in
+    decodeInt64
+        |> D.andThen (\len -> D.loop ( len, initial ) doStep)
 
 
 {-| -}
