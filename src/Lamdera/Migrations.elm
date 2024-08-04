@@ -11,6 +11,7 @@ module Lamdera.Migrations exposing (ModelMigration(..), MsgMigration(..), Unimpl
 type ModelMigration model msg
     = ModelUnchanged
     | ModelMigrated ( model, Cmd msg )
+    | ModelReset
 
 
 {-| -}
