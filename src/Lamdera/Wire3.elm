@@ -257,7 +257,15 @@ decodeInt64 =
                     D.succeed (\b0 b1 b2 b3 -> ((b0 * 256 + b1) * 256 + b2) * 256 + b3) |> d |> d |> d |> d |> D.map unsignedToSigned
 
                 else
-                    decodeFloat64 |> D.map identityFloatToInt
+                    decodeFloat64
+                        |> D.andThen
+                            (\n1 ->
+                                if isNaN n1 || isInfinite n1 then
+                                    D.fail
+
+                                else
+                                    D.succeed (floor n1)
+                            )
             )
 
 
