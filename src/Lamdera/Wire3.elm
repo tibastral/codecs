@@ -1,3 +1,7 @@
+-- NOTE: Many of the functions here are referenced directly by the compiler!
+-- Search for `VarForeign mLamdera_Wire` in the compiler code base to find them.
+
+
 module Lamdera.Wire3 exposing
     ( Decoder, Encoder, Bytes
     , decodeFloat64, decodeInt, decodeInt64, decodeString, decodeUnit, decodePair, decodeTriple, decodeBool, decodeBytes, decodeChar
@@ -113,6 +117,9 @@ failDecodeDebug : String -> Decoder a
 failDecodeDebug ident =
     let
         _ =
+            -- Note: `failDecodeDebug` isn’t used by the compiler, but `failDecode` is.
+            -- It’s convenient to add the word “Debug” temporarily in the compiler
+            -- to debug a decoder failure with the help of the below line.
             Elm.Kernel.LamderaCodecs.debug <| "failDecode:" ++ ident
     in
     D.fail
