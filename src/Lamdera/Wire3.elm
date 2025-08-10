@@ -1,3 +1,7 @@
+-- NOTE: Many of the functions here are referenced directly by the compiler!
+-- Search for `VarForeign mLamdera_Wire` in the compiler code base to find them.
+
+
 module Lamdera.Wire3 exposing
     ( Decoder, Encoder, Bytes
     , decodeFloat64, decodeInt, decodeInt64, decodeString, decodeUnit, decodePair, decodeTriple, decodeBool, decodeBytes, decodeChar
@@ -108,15 +112,17 @@ failDecode =
     D.fail
 
 
-
--- {-| -}
--- failDecodeDebug : String -> Decoder a
--- failDecodeDebug ident =
---     let
---         _ =
---             Elm.Kernel.LamderaCodecs.debug <| "failDecode:" ++ ident
---     in
---     D.fail
+{-| -}
+failDecodeDebug : String -> Decoder a
+failDecodeDebug ident =
+    let
+        _ =
+            -- Note: `failDecodeDebug` isn’t used by the compiler, but `failDecode` is.
+            -- It’s convenient to add the word “Debug” temporarily in the compiler
+            -- to debug a decoder failure with the help of the below line.
+            Elm.Kernel.LamderaCodecs.debug <| "failDecode:" ++ ident
+    in
+    D.fail
 
 
 {-| -}
@@ -631,19 +637,20 @@ decodeEndianness =
             )
 
 
+encodeRef : a -> Encoder
+encodeRef v =
+    Elm.Kernel.LamderaCodecs.encodeWithRef v
+        |> E.unsignedInt32 endianness
 
--- encodeRef : a -> Encoder
--- encodeRef v =
---     Elm.Kernel.LamderaCodecs.encodeWithRef v
---         |> E.unsignedInt32 endianness
--- decodeRef : D.Decoder a
--- decodeRef =
---     D.unsignedInt32
---         endianness
---         |> D.andThen
---             (\ref ->
---                 succeedDecode <| Elm.Kernel.LamderaCodecs.decodeWithRef ref
---             )
+
+decodeRef : D.Decoder a
+decodeRef =
+    D.unsignedInt32
+        endianness
+        |> D.andThen
+            (\ref ->
+                succeedDecode <| Elm.Kernel.LamderaCodecs.decodeWithRef ref
+            )
 
 
 {-| -}
@@ -685,8 +692,7 @@ decodeBytes_ =
     Elm.Kernel.LamderaCodecs.decodeBytes
 
 
-
--- {-| -}
--- debug : String -> a
--- debug s =
---     Elm.Kernel.LamderaCodecs.debug s
+{-| -}
+debug : String -> a
+debug s =
+    Elm.Kernel.LamderaCodecs.debug s
