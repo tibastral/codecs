@@ -55,12 +55,18 @@ var _LamderaCodecs_debug = function(s) {
   return _Utils_Tuple0;
 }
 
+// The function inside an elm/bytes `Decoder`. With --optimize, single-constructor
+// types are unboxed and the decoder IS the function; without it, the decoder is
+// `{ $: 'Decoder', a: function }`.
+function _LamderaCodecs_unwrapDecoder__DEBUG(decoder) { return decoder.a; }
+function _LamderaCodecs_unwrapDecoder__PROD(decoder) { return decoder; }
+
 // Duplicate of _Bytes_decode that expects all bytes to be consumed,
 // otherwise it fails to decode.
 var _LamderaCodecs_bytesDecodeStrict = F2(function(decoder, bytes)
 {
   try {
-    var res = A2(decoder, bytes, 0);
+    var res = A2(_LamderaCodecs_unwrapDecoder(decoder), bytes, 0);
     const w = bytes.byteLength;
     if (w !== res.a) {
       // For now just log issues, in future we'll actually fail on this case
