@@ -86,19 +86,47 @@ var _LamderaCodecs_bytesDecodeStrict = F2(function(decoder, bytes)
 
 // DIRECT DECODERS
 //
-// The Wire3 decoders below read their bytes directly and allocate a single
-// (offset, value) tuple, the elm/bytes decoder protocol. The Elm versions they
-// replace stack `andThen`, `map` and `succeed`, each of which allocates closures
-// and intermediate decoders: decoding a single one-byte Int used to allocate
-// about six objects. On a 16 MB snapshot from a production app, decoding went
-// from ~780 ms to ~60 ms (Node 26, Apple M1), most of the old cost being garbage
-// collection.
+// The Wire3 decoders below read their bytes directly instead of stacking
+// elm/bytes' `andThen`, `map` and `succeed`, each of which allocates closures
+// and intermediate decoders for every value decoded. They still follow the
+// elm/bytes decoder protocol, so each one returns an (offset, value) tuple. What
+// each allocates besides the value it builds (no allocation figure is claimed,
+// only what the code does):
 //
-// They return exactly what the Elm versions returned, for any input bytes,
-// including malformed ones: same values, same offsets, and a failure (a throw,
-// which `Bytes.Decode.decode` turns into `Nothing`) wherever the Elm version
-// failed. tests/Equivalence.elm checks this against the previous Elm
-// implementations.
+//   decodeInt64, decodeBool  the tuple only (decodeInt64 passes the offset
+//                            it reaches through a module variable, not a
+//                            tuple).
+//   decodeString             the tuple, and the work to build the string: a
+//                            string of up to 32 ASCII bytes is built by
+//                            concatenation, character by character; any other
+//                            one is decoded by TextDecoder from a Uint8Array
+//                            view of the bytes. Bytes that are not valid UTF-8
+//                            fall back to elm/bytes' own string decoder, after
+//                            the view.
+//   decodeList               the tuple, a JavaScript array holding the items,
+//                            then the cells of the Elm list (List.fromArray),
+//                            besides what the item decoder allocates per item.
+//   decodeMaybe              the tuple, and the Just cell.
+//   andMapDecode             the tuple, besides what its two decoders allocate
+//                            and what applying the function to the argument
+//                            allocates. Each call that builds the decoder
+//                            (andMapDecode, decodeList, decodeMaybe applied to
+//                            their decoder arguments) allocates the elm/bytes
+//                            decoder and an F2 closure; whether that happens
+//                            once or at every decoding depends on whether the
+//                            caller builds the decoder once or inside a function.
+//
+// On a 16 MB snapshot from a production app, decoding went from ~780 ms to
+// ~60 ms (Node 26, Apple M1). That measurement was made outside this
+// repository, on data that is not in it, and none of the scripts reproduces it.
+//
+// They are meant to return exactly what the Elm versions returned, malformed
+// input included: same values, same offsets, and a failure (a throw, which
+// `Bytes.Decode.decode` turns into `Nothing`) wherever the Elm version failed.
+// tests/Equivalence.elm checks this against the previous Elm implementations on
+// edge cases, random bytes and valid encodings altered in several ways (not on
+// every possible input), and scripts/test-optimize.sh checks it again with and
+// without --optimize.
 //
 // `decodeInt64`, `decodeString` and `decodeBool` are functions of `()` rather
 // than values: elm/bytes' `Decoder` constructor is not defined yet when this
